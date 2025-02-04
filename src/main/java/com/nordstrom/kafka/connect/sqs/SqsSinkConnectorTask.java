@@ -36,8 +36,6 @@ import org.slf4j.Logger ;
 import org.slf4j.LoggerFactory ;
 import com.nordstrom.kafka.connect.utils.StructSerializer;
 
-import com.nordstrom.kafka.connect.sqs.SqsSinkConnector ;
-
 public class SqsSinkConnectorTask extends SinkTask {
   Logger log = LoggerFactory.getLogger( this.getClass() ) ;
 
@@ -73,10 +71,16 @@ public class SqsSinkConnectorTask extends SinkTask {
     log.info( "task.start" ) ;
     Guard.verifyNotNull( props, "Task properties" ) ;
 
+
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(Struct.class, new StructSerializer());
+    objectMapper.registerModule(module);
+
     config = new SqsSinkConnectorConfig( props ) ;
     client = new SqsClient(config) ;
 
     log.info( "task.start:OK, sqs.queue.url={}, topics={}", config.getQueueUrl(), config.getTopics() ) ;
+
   }
 
   /*
