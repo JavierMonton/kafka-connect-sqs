@@ -24,23 +24,34 @@ import java.util.Map ;
 
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.kafka.common.errors.RetriableException;
 import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.header.Headers;
 import org.apache.kafka.connect.sink.SinkRecord ;
 import org.apache.kafka.connect.sink.SinkTask ;
 import org.slf4j.Logger ;
 import org.slf4j.LoggerFactory ;
+import com.nordstrom.kafka.connect.utils.StructSerializer;
 
 import com.nordstrom.kafka.connect.sqs.SqsSinkConnector ;
 
 public class SqsSinkConnectorTask extends SinkTask {
-  private final Logger log = LoggerFactory.getLogger( this.getClass() ) ;
+  Logger log = LoggerFactory.getLogger( this.getClass() ) ;
 
-  private SqsClient client ;
-  private SqsSinkConnectorConfig config ;
+  SqsClient client ;
+  SqsSinkConnectorConfig config ;
+
+  // Used to serialize Struct objects to JSON
+  // This is needed when the value.converter is set to Protobuf, Avro or any other non-String format
   private final ObjectMapper objectMapper = new ObjectMapper();
+  public SqsSinkConnectorTask() {
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(Struct.class, new StructSerializer());
+    objectMapper.registerModule(module);
+  }
 
   /*
    * (non-Javadoc)
