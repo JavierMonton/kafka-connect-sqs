@@ -35,6 +35,7 @@ import org.apache.kafka.connect.sink.SinkTask ;
 import org.slf4j.Logger ;
 import org.slf4j.LoggerFactory ;
 import com.nordstrom.kafka.connect.utils.StructSerializer;
+import com.nordstrom.kafka.connect.utils.ObjectMapperProvider;
 
 public class SqsSinkConnectorTask extends SinkTask {
   Logger log = LoggerFactory.getLogger( this.getClass() ) ;
@@ -44,12 +45,7 @@ public class SqsSinkConnectorTask extends SinkTask {
 
   // Used to serialize Struct objects to JSON
   // This is needed when the value.converter is set to Protobuf, Avro or any other non-String format
-  private final ObjectMapper objectMapper = new ObjectMapper();
-  public SqsSinkConnectorTask() {
-    SimpleModule module = new SimpleModule();
-    module.addSerializer(Struct.class, new StructSerializer());
-    objectMapper.registerModule(module);
-  }
+  private final ObjectMapper objectMapper = ObjectMapperProvider.getObjectMapper();
 
   /*
    * (non-Javadoc)
@@ -70,11 +66,6 @@ public class SqsSinkConnectorTask extends SinkTask {
   public void start( Map<String, String> props ) {
     log.info( "task.start" ) ;
     Guard.verifyNotNull( props, "Task properties" ) ;
-
-
-    SimpleModule module = new SimpleModule();
-    module.addSerializer(Struct.class, new StructSerializer());
-    objectMapper.registerModule(module);
 
     config = new SqsSinkConnectorConfig( props ) ;
     client = new SqsClient(config) ;
