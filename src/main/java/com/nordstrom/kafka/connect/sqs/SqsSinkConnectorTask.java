@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map ;
 
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.errors.RetriableException;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.header.Header;
@@ -39,6 +40,7 @@ public class SqsSinkConnectorTask extends SinkTask {
 
   private SqsClient client ;
   private SqsSinkConnectorConfig config ;
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
   /*
    * (non-Javadoc)
@@ -87,7 +89,15 @@ public class SqsSinkConnectorTask extends SinkTask {
           record.kafkaOffset() ) ;
       final String key = Facility.isNotNull( record.key() ) ? record.key().toString() : null ;
       final String gid = Facility.isNotNullNorEmpty( key ) ? key : record.topic() ;
-      final String body = Facility.isNotNull( record.value() ) ? record.value().toString() : "" ;
+      //final String body = Facility.isNotNull( record.value() ) ? record.value().toString() : "" ;
+      String body = "";
+      if (Facility.isNotNull(record.value())) {
+        try {
+          body = objectMapper.writeValueAsString(record.value());
+        } catch (Exception e) {
+          log.error("Failed to convert record value to JSON", e);
+        }
+      }
 
       Map<String, MessageAttributeValue> messageAttributes = null;
 
